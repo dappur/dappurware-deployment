@@ -1,8 +1,8 @@
 {
-    "name": "dappur/dappurware-depoloyment",
+    "name": "dappur/dappurware-deployment",
     "description": "Deployment support package for the Dappur Framework",
     "keywords": ["dappur", "dappurware", "framework", "deploy"],
-    "version": "4.0.0",
+    "version": "4.0.1",
     "homepage": "https://github.com/dappur/dappurware",
     "license": "MIT",
     "authors": [
