@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- Code Cleanup
 
 ## [4.0.1] - 2018-12-12
 ### Fixed

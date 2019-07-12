@@ -72,13 +72,17 @@ class Deployment
         
         // Check Repo Url
         if (!isset($settingsFile->deployment->repo_url) || $settingsFile->deployment->repo_url == "") {
-            die($this->logEntry("Please ensure that you have a repo URL in the deployment section of settings.json."));
+            die(
+                $this->logEntry("Please ensure that you have a repo URL in the deployment section of settings.json.")
+            );
         }
         $this->repoUrl = $settingsFile->deployment->repo_url;
 
         // Check Repo Branch
         if (!isset($settingsFile->deployment->repo_branch) || $settingsFile->deployment->repo_branch == "") {
-            die($this->logEntry("Please ensure that you have a repo branch in the deployment section of settings.json."));
+            die(
+                $this->logEntry("Please ensure that you have a repo branch in the deployment section of settings.json.")
+            );
         }
         $this->repoBranch = $settingsFile->deployment->repo_branch;
 
@@ -135,7 +139,7 @@ class Deployment
         if (!is_writable(dirname($this->documentRoot))) {
             die(
                 $this->logEntry(
-                        "Web server user does not have access to the DOCUMENT_ROOT's parent directory. ".
+                    "Web server user does not have access to the DOCUMENT_ROOT's parent directory. ".
                     "This is required in order for Dappur to function properly."
                 )
             );
@@ -159,13 +163,13 @@ class Deployment
             }
         } else {
             // Check that composer is working
-            $check_composer = shell_exec(dirname($this->documentRoot) . "/composer.phar" . ' --version 2>&1');
-            echo $this->logEntry($check_composer);
-            if (strpos($check_composer, 'omposer version')) {
+            $checkComposer = shell_exec(dirname($this->documentRoot) . "/composer.phar" . ' --version 2>&1');
+            echo $this->logEntry($checkComposer);
+            if (strpos($checkComposer, 'omposer version')) {
                 // Check for Composer updates
-                $update_composer = shell_exec(dirname($this->documentRoot) . "/composer.phar self-update 2>&1");
+                $updateComposer = shell_exec(dirname($this->documentRoot) . "/composer.phar self-update 2>&1");
                 echo $this->logEntry("Checking For Composer Update...");
-                echo $this->logEntry($update_composer);
+                echo $this->logEntry($updateComposer);
             }
         }
     }
@@ -173,9 +177,9 @@ class Deployment
     private function checkGit()
     {
         // Check that git is installed
-        $check_git = shell_exec($this->gitBinPath . " --version");
-        echo $this->logEntry($check_git);
-        if (!strpos($check_git, 'it version ')) {
+        $checkGit = shell_exec($this->gitBinPath . " --version");
+        echo $this->logEntry($checkGit);
+        if (!strpos($checkGit, 'it version ')) {
             die($this->logEntry("<pre>Git is required in order for auto deployment to work. ".
                 "Please check the deploy.init.log for errors.</pre>"));
         }
@@ -225,20 +229,25 @@ class Deployment
 
         // Check Known Hosts file for github.com and add using ssh-keyscan
         if (is_file('~/.ssh/known_hosts')) {
-            $known_hosts = file_get_contents('~/.ssh/known_hosts');
-            if (!strpos($known_hosts, "github.com")) {
+            $knownHosts = file_get_contents('~/.ssh/known_hosts');
+            if (!strpos($knownHosts, "github.com")) {
                 // Add Github to the known hosts
-                $add_github = shell_exec('ssh-keyscan github.com >> ~/.ssh/known_hosts');
-                $this->logEntry($add_github);
+                $addGithub = shell_exec('ssh-keyscan github.com >> ~/.ssh/known_hosts');
+                $this->logEntry($addGithub);
             }
         } else {
             // Add Github to the known hosts
-            $add_github = shell_exec('ssh-keyscan github.com >> ~/.ssh/known_hosts');
+            $addGithub = shell_exec('ssh-keyscan github.com >> ~/.ssh/known_hosts');
         }
 
         // Create the Mirror Repository
         $create_repo_mirror = shell_exec(
-            'cd ' . $this->repoDir . ' && ' . 'GIT_SSH_COMMAND="ssh -i ' . $this->certPath . ' -F /dev/null" ' . $this->gitBinPath  . ' clone --mirror ' . $this->repoUrl . " . 2>&1"
+            'cd ' . $this->repoDir .
+            ' && ' .
+            'GIT_SSH_COMMAND="ssh -i ' . $this->certPath .
+            ' -F /dev/null" ' . $this->gitBinPath  .
+            ' clone --mirror ' . $this->repoUrl .
+            " . 2>&1"
         );
         echo $this->logEntry($create_repo_mirror);
         if (strpos($create_repo_mirror, 'ermission denied (publickey)') ||
@@ -255,56 +264,64 @@ class Deployment
         }
 
         // Do the initial checkout
-        $git_checkout = shell_exec(
+        $gitCheckout = shell_exec(
             'cd ' . $this->repoDir .
             ' && GIT_WORK_TREE=' . dirname($this->documentRoot) . ' ' .
                 $this->gitBinPath  . ' checkout ' . $this->repoBranch . ' -f 2>&1'
         );
-        echo $this->logEntry($git_checkout);
+        echo $this->logEntry($gitCheckout);
         // Get the deployment commit hash
-        $commit_hash = exec('cd ' . $this->repoDir . ' && ' . $this->gitBinPath  . ' rev-parse --short HEAD 2>&1');
-        echo $this->logEntry("Deployed Commit: " . $commit_hash);
+        $commitHash = exec('cd ' . $this->repoDir . ' && ' . $this->gitBinPath  . ' rev-parse --short HEAD 2>&1');
+        echo $this->logEntry("Deployed Commit: " . $commitHash);
     }
 
     private function updateRepository()
     {
 
         // Fetch any new changes
-        $git_fetch = exec('cd ' . $this->repoDir . ' && ' . 'GIT_SSH_COMMAND="ssh -i ' . $this->certPath . ' -F /dev/null" ' .  $this->gitBinPath  . ' fetch 2>&1');
-        if (empty($git_fetch)) {
+        $gitFetch = exec(
+            'cd ' . $this->repoDir .
+            ' && ' . 'GIT_SSH_COMMAND="ssh -i ' . $this->certPath .
+            ' -F /dev/null" ' .  $this->gitBinPath  .
+            ' fetch 2>&1'
+        );
+        if (empty($gitFetch)) {
             echo $this->logEntry("There is nothing new to fetch from this repository.");
         } else {
-            echo $this->logEntry($git_fetch);
+            echo $this->logEntry($gitFetch);
             // Do the checkout
             shell_exec(
                 'cd ' . $this->repoDir . ' && GIT_WORK_TREE=' . dirname($this->documentRoot) . ' ' .
                 $this->gitBinPath  . ' checkout ' . $this->repoBranch . ' -f 2>&1'
             );
-            // Get the deployment commit hash
-            $commit_hash = exec(
+            // Get the deployment commit hash$gitFetch
+            $commitHash = exec(
                 'cd ' . $this->repoDir . ' && ' . $this->gitBinPath  . ' rev-parse --short HEAD 2>&1'
             );
-            echo $this->logEntry("Deployed Commit: " . $commit_hash);
+            echo $this->logEntry("Deployed Commit: " . $commitHash);
         }
     }
 
     private function updateComposer()
     {
-        $checkLockFile = exec('cd ' . $this->repoDir . ' && ' . $this->gitBinPath  . ' ls-files --error-unmatch composer.lock 2>&1');
+        $checkLockFile = exec(
+            'cd ' . $this->repoDir . ' && ' .
+            $this->gitBinPath  . ' ls-files --error-unmatch composer.lock 2>&1'
+        );
         if (strpos($checkLockFile, 'did not match any file')) {
-            $update_composer = shell_exec(
+            $updateComposer = shell_exec(
                 'cd ' . dirname($this->documentRoot) . ' && ' .
                 dirname($this->documentRoot) . '/composer.phar update --no-dev 2>&1'
             );
         } else {
-            $update_composer = shell_exec(
+            $updateComposer = shell_exec(
                 'cd ' . dirname($this->documentRoot) . ' && ' .
                 dirname($this->documentRoot) . '/composer.phar install --no-dev 2>&1'
             );
         }
         
-        echo $this->logEntry($update_composer);
-        if (!strpos($update_composer, 'Generating autoload files')) {
+        echo $this->logEntry($updateComposer);
+        if (!strpos($updateComposer, 'Generating autoload files')) {
             echo $this->logEntry("An error might have occured while updating composer.  ".
                 "Please check the deployment log to confirm.");
         } else {
@@ -322,18 +339,18 @@ class Deployment
         if (file_exists($this->certFolder . '/' . $this->certFileName) &&
             file_exists($this->certFolder . '/' . $this->certFileName . ".pub")) {
             return file_get_contents($this->certFolder . '/' . $this->certFileName . ".pub");
-        } elseif (!file_exists($this->certFolder . '/' . $this->certFileName)) {
+        } elseif (!file_exists($this$publicKey->certFolder . '/' . $this->certFileName)) {
             // Create the deploy key with ssh-keygen
-            $generate_key = exec(
+            $generateKey = exec(
                 "ssh-keygen -q -N '' -t rsa -b 4096 -f " . $this->certFolder . "/" . $this->certFileName
             );
-            echo $this->logEntry($generate_key);
+            echo $this->logEntry($generateKey);
             // Get the contents of the public key
-            $public_key = file_get_contents($this->certFolder . '/' . $this->certFileName . '.pub');
+            $publicKey = file_get_contents($this->certFolder . '/' . $this->certFileName . '.pub');
             // Install the deploy key if not already done
 
             // Return the public key
-            return $public_key;
+            return $publicKey;
         } else {
             // Install the deploy key if not already done
 
@@ -373,9 +390,9 @@ class Deployment
         if ($output['check_file'] == false && $output['check_construct'] == false) {
             die($this->logEntry("Could not successfully connect to a database.  ".
                 "Please check your settings and run this script again."));
-        } else {
-            return $output;
         }
+
+        return $output;
     }
 
     private function checkPhinx()
@@ -384,20 +401,20 @@ class Deployment
         // Check if Phinx is installed
         if (!is_file(dirname($this->documentRoot) . '/vendor/robmorgan/phinx/bin/phinx')) {
             // Install/Update Phinx globally in composer
-            $install_phinx = shell_exec(
+            $installPhinx = shell_exec(
                 "cd " . dirname($this->documentRoot) . " && ./composer.phar require robmorgan/phinx 2>&1"
             );
-            echo $this->logEntry($install_phinx);
-            if (!strpos($install_phinx, 'for robmorgan/phinx')) {
+            echo $this->logEntry($installPhinx);
+            if (!strpos($installPhinx, 'for robmorgan/phinx')) {
                 die($this->logEntry("Phinx is required as a global composer dependency.  ".
                     "Please check that it is installed and your web user has access to it."));
             }
         }
 
         // Check that phinx was installed properly
-        $check_phinx = shell_exec(dirname($this->documentRoot) . "/vendor/robmorgan/phinx/bin/phinx --version");
-        echo $this->logEntry($check_phinx);
-        if (!strpos($check_phinx, 'https://phinx.org')) {
+        $checkPhinx = shell_exec(dirname($this->documentRoot) . "/vendor/robmorgan/phinx/bin/phinx --version");
+        echo $this->logEntry($checkPhinx);
+        if (!strpos($checkPhinx, 'https://phinx.org')) {
             die($this->logEntry("Phinx is required in order for database migration to work.  ".
                 "Please check the deploy.init.log for errors."));
         }
@@ -412,11 +429,11 @@ class Deployment
 
     private function migrateUp()
     {
-        $migrate_up = shell_exec(
+        $migrateUp = shell_exec(
             "cd " . dirname($this->documentRoot) . " && ./vendor/robmorgan/phinx/bin/phinx migrate 2>&1"
         );
-        echo $this->logEntry($migrate_up);
-        if (!strpos($migrate_up, 'All Done.')) {
+        echo $this->logEntry($migrateUp);
+        if (!strpos($migrateUp, 'All Done.')) {
             echo $this->logEntry("There might have been an error in the database migration.  ".
                 "Please check the logs to be sure.");
         } else {
@@ -424,7 +441,7 @@ class Deployment
         }
     }
 
-    private function logEntry($log_text, $return = true)
+    private function logEntry($logText, $return = true)
     {
 
         // Create log folder if it does not exist
@@ -438,10 +455,10 @@ class Deployment
         }
 
         // Add Log Entry to file
-        file_put_contents($this->logFile, date('m/d/Y h:i:s a') . " " . $log_text . "\n", FILE_APPEND);
+        file_put_contents($this->logFile, date('m/d/Y h:i:s a') . " " . $logText . "\n", FILE_APPEND);
 
         if ($return == true) {
-            return "<pre>" . date('m/d/Y h:i:s a') . " $log_text" . "</pre>";
+            return "<pre>" . date('m/d/Y h:i:s a') . " $logText" . "</pre>";
         }
     }
 }
