@@ -3,7 +3,7 @@
 ## [Unreleased]
 - No Changes
 
-## [v4.0.2] - 2019-07-12
+## [4.0.2] - 2019-07-12
 ### Changed
 - Code Cleanup
 
