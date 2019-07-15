@@ -339,7 +339,7 @@ class Deployment
         if (file_exists($this->certFolder . '/' . $this->certFileName) &&
             file_exists($this->certFolder . '/' . $this->certFileName . ".pub")) {
             return file_get_contents($this->certFolder . '/' . $this->certFileName . ".pub");
-        } elseif (!file_exists($this$publicKey->certFolder . '/' . $this->certFileName)) {
+        } elseif (!file_exists($this->certFolder . '/' . $this->certFileName)) {
             // Create the deploy key with ssh-keygen
             $generateKey = exec(
                 "ssh-keygen -q -N '' -t rsa -b 4096 -f " . $this->certFolder . "/" . $this->certFileName
